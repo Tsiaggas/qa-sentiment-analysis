@@ -1,36 +1,165 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Λειτουργικότητα Ανάλυσης Συναισθήματος
 
-## Getting Started
+Αυτό το έγγραφο περιέχει οδηγίες για την εγκατάσταση, ρύθμιση και χρήση της λειτουργικότητας ανάλυσης συναισθήματος στην εφαρμογή QA.
 
-First, run the development server:
+## Περιεχόμενα
+
+1. [Επισκόπηση](#επισκόπηση)
+2. [Εγκατάσταση Βάσης Δεδομένων](#εγκατάσταση-βάσης-δεδομένων)
+3. [Ρύθμιση Εφαρμογής](#ρύθμιση-εφαρμογής)
+4. [Χρήση της Λειτουργικότητας](#χρήση-της-λειτουργικότητας)
+5. [API References](#api-references)
+6. [Αντιμετώπιση Προβλημάτων](#αντιμετώπιση-προβλημάτων)
+
+## Επισκόπηση
+
+Η λειτουργικότητα ανάλυσης συναισθήματος επεκτείνει την εφαρμογή QA, επιτρέποντας την ανάλυση συναισθήματος σε κριτικές πελατών. Χρησιμοποιεί ένα εκπαιδευμένο μοντέλο BERT (fine-tuned-for-sentiment-3class) που είναι διαθέσιμο στο Hugging Face και προσφέρει ανάλυση σε τρεις κατηγορίες: Θετικό, Αρνητικό και Ουδέτερο.
+
+## Εγκατάσταση Βάσης Δεδομένων
+
+### 1. Δημιουργία Πινάκων στο Supabase
+
+Για να εγκαταστήσετε τους απαραίτητους πίνακες στο Supabase, ακολουθήστε τα παρακάτω βήματα:
+
+1. Συνδεθείτε στο Supabase Dashboard
+2. Επιλέξτε το project σας
+3. Πηγαίνετε στο "SQL Editor"
+4. Εκτελέστε το SQL script που βρίσκεται στο αρχείο `sql/database_setup.sql` 
+
+Αυτό θα δημιουργήσει:
+- Τους υπάρχοντες πίνακες `users` και `qa_evaluations` (αν δεν υπάρχουν ήδη)
+- Τους νέους πίνακες `customer_reviews` και `sentiment_analysis`
+- Τα απαραίτητα ευρετήρια και πολιτικές ασφαλείας (RLS)
+
+### 2. Εισαγωγή Δεδομένων Δοκιμής (Προαιρετικό)
+
+Για να εισάγετε δεδομένα δοκιμής στη βάση δεδομένων:
+
+1. Πηγαίνετε στο "SQL Editor" του Supabase
+2. Εκτελέστε το SQL script που βρίσκεται στο αρχείο `sql/sample_data.sql`
+
+**Προσοχή**: Το script αυτό περιέχει εντολές `TRUNCATE` που θα διαγράψουν τα υπάρχοντα δεδομένα. Σε παραγωγικό περιβάλλον, αφαιρέστε αυτές τις εντολές ή χρησιμοποιήστε το script μόνο για τεστ.
+
+## Ρύθμιση Εφαρμογής
+
+### 1. Εγκατάσταση Εξαρτήσεων
+
+Εκτελέστε την παρακάτω εντολή για να εγκαταστήσετε τις απαραίτητες εξαρτήσεις:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install react-d3-speedometer
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Ρύθμιση Μεταβλητών Περιβάλλοντος
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Δημιουργήστε ή επεξεργαστείτε το αρχείο `.env.local` στη ρίζα του project
+2. Προσθέστε το API κλειδί του Hugging Face:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+NEXT_PUBLIC_HUGGINGFACE_API_KEY=your_huggingface_api_key
+```
 
-## Learn More
+Για να αποκτήσετε κλειδί API:
+1. Επισκεφθείτε το [Hugging Face](https://huggingface.co/)
+2. Δημιουργήστε λογαριασμό ή συνδεθείτε
+3. Πηγαίνετε στο Settings > Access Tokens
+4. Δημιουργήστε ένα νέο token με τα κατάλληλα δικαιώματα (read)
 
-To learn more about Next.js, take a look at the following resources:
+## Χρήση της Λειτουργικότητας
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Η λειτουργικότητα ανάλυσης συναισθήματος είναι προσβάσιμη μέσω των παρακάτω σελίδων:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Κριτικές Πελατών** (`/reviews`) - Λίστα με όλες τις κριτικές και τα αποτελέσματα ανάλυσης
+2. **Νέα Κριτική** (`/reviews/new`) - Φόρμα για την εισαγωγή νέας κριτικής και ανάλυση συναισθήματος
+3. **Ανάλυση Συναισθήματος** (`/metrics/sentiment`) - Dashboard με στατιστικά στοιχεία
 
-## Deploy on Vercel
+### Διαδικασία Ανάλυσης Συναισθήματος
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Μεταβείτε στη σελίδα "Νέα Κριτική"
+2. Εισάγετε το κείμενο της κριτικής του πελάτη
+3. Επιλέξτε την πηγή και εισάγετε προαιρετικά στοιχεία επικοινωνίας
+4. Πατήστε "Ανάλυση Συναισθήματος" για άμεση ανάλυση
+5. Δείτε το αποτέλεσμα στον οπτικοποιημένο μετρητή
+6. Πατήστε "Αποθήκευση Κριτικής" για να αποθηκεύσετε την κριτική και το αποτέλεσμα
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Αναζήτηση και Φιλτράρισμα Κριτικών
+
+Στη σελίδα "Κριτικές Πελατών" μπορείτε να:
+- Αναζητήσετε κριτικές με βάση το περιεχόμενο
+- Φιλτράρετε με βάση την πηγή
+- Φιλτράρετε με βάση το συναίσθημα (Θετικό, Αρνητικό, Ουδέτερο)
+- Εμφανίσετε μόνο αναλυμένες κριτικές
+
+### Προβολή Στατιστικών
+
+Στη σελίδα "Ανάλυση Συναισθήματος" μπορείτε να δείτε:
+- Συνολικό αριθμό αναλύσεων
+- Κατανομή συναισθημάτων (Θετικά, Αρνητικά, Ουδέτερα)
+- Μέσο σκορ ανάλυσης
+- Λίστα πρόσφατων αναλύσεων
+
+## API References
+
+### Endpoints
+
+- `POST /api/sentiment` - Ανάλυση συναισθήματος για ένα κείμενο
+  - Παράμετροι: `text` (υποχρεωτικό), `reviewId` (προαιρετικό)
+  - Αν παρέχεται `reviewId`, το αποτέλεσμα αποθηκεύεται στη βάση δεδομένων
+
+- `POST /api/sentiment/batch` - Ανάλυση συναισθήματος για πολλαπλά κείμενα
+  - Παράμετροι: `texts` (υποχρεωτικό, πίνακας κειμένων)
+
+### Παράδειγμα Χρήσης (JavaScript)
+
+```javascript
+// Ανάλυση ενός κειμένου
+const analyzeText = async (text) => {
+  const response = await fetch('/api/sentiment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text })
+  });
+  
+  const result = await response.json();
+  return result;
+};
+
+// Αποθήκευση κριτικής και ανάλυσης
+const saveReviewWithAnalysis = async (text, source, reviewId) => {
+  const response = await fetch('/api/sentiment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, reviewId })
+  });
+  
+  const result = await response.json();
+  return result;
+};
+```
+
+## Αντιμετώπιση Προβλημάτων
+
+### Συχνά Προβλήματα
+
+1. **Σφάλμα "Unauthorized" από το Hugging Face API**
+   - Ελέγξτε ότι έχετε ορίσει σωστά το `NEXT_PUBLIC_HUGGINGFACE_API_KEY` στο αρχείο `.env.local`
+   - Επαληθεύστε ότι το API κλειδί είναι έγκυρο και ενεργό
+
+2. **Το μοντέλο δεν φορτώνεται**
+   - Ελέγξτε τη σύνδεση στο internet
+   - Επαληθεύστε ότι το μοντέλο είναι διαθέσιμο στο Hugging Face
+
+3. **Σφάλματα στη βάση δεδομένων**
+   - Ελέγξτε ότι οι πίνακες έχουν δημιουργηθεί σωστά
+   - Επαληθεύστε τις συνδέσεις και τα δικαιώματα στο Supabase
+
+4. **Η οπτικοποίηση δεν εμφανίζεται**
+   - Ελέγξτε ότι η βιβλιοθήκη `react-d3-speedometer` έχει εγκατασταθεί σωστά
+   - Καθαρίστε την cache του browser και δοκιμάστε ξανά
+
+### Καταγραφή Σφαλμάτων
+
+Η εφαρμογή καταγράφει σφάλματα στην κονσόλα του browser. Για να δείτε τα σφάλματα:
+1. Ανοίξτε τα Developer Tools του browser (F12 ή Ctrl+Shift+I)
+2. Πηγαίνετε στην καρτέλα "Console"
+3. Ελέγξτε για μηνύματα σφάλματος που σχετίζονται με την ανάλυση συναισθήματος 
